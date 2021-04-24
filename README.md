@@ -1,5 +1,9 @@
-[![tests](https://github.com/electrovir/base-vir/workflows/tests/badge.svg)](https://github.com/electrovir/base-vir/actions)
+[![tests](https://github.com/electrovir/fsm-vir/workflows/tests/badge.svg)](https://github.com/electrovir/fsm-vir/actions)
 
-# base-vir
+# fsm-vir
 
-The heroic repository template.
+The heroic finite state machine package.
+
+# Usage
+
+[See examples here,](https://github.com/electrovir/fsm-vir/blob/master/src/test) such as [this one](https://github.com/electrovir/fsm-vir/blob/master/src/test/basic-output-fsm.ts)
