@@ -1,4 +1,4 @@
-import {ReadonlyIfObject} from '../augment';
+import {ReadonlyIfObject} from '../type-helpers';
 
 export abstract class CallbackError<StateType, ValueType, OutputType> extends Error {
     public readonly name: string = 'CallbackError';

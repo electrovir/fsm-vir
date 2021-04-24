@@ -1,9 +1,9 @@
-import {ReadonlyIfObject} from './augment';
 import {CalculateNextStateError} from './errors/calculate-next-state-error';
 import {CallbackError} from './errors/callback-error';
 import {EmptyInputError} from './errors/empty-input-error';
 import {EndOfInputError} from './errors/end-of-input-error';
 import {StateActionError} from './errors/state-action-error';
+import {ReadonlyIfObject} from './type-helpers';
 
 export type performStateActionFunction<StateType, ValueType, OutputType> = (
     currentState: ReadonlyIfObject<StateType>,
