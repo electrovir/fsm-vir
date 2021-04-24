@@ -1,6 +1,6 @@
 {
     "name": "fsm-vir",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "The heroic finite state machine package.",
     "keywords": [
         "fsm",
@@ -26,7 +26,7 @@
     "author": "electrovir (github.com/electrovir)",
     "main": "dist/index.js",
     "scripts": {
-        "prepublishOnly": "rm -rf dist && npm run test && npm run spellcheck",
+        "prepublishOnly": "rm -rf dist && rm -rf node_modules && npm install && npm run test && npm run spellcheck",
         "test": "tsc && test-vir \"./**/!(*.type).test.js\"",
         "spellcheck": "cspell --no-progress --unique \"./**/*\"",
         "test:full": "npm run test && npm run spellcheck -- --no-progress && npm run format:check",

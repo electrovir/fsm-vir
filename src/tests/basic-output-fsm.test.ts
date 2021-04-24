@@ -40,6 +40,7 @@ testGroup((runTest) => {
             return result.output;
         },
     });
+
     runTest({
         description: 'errors block execution by default',
         expectError: {

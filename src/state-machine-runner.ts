@@ -42,6 +42,11 @@ export type StateMachineSetup<StateType, ValueType, OutputType> = {
     initialOutput?: ReadonlyIfObject<OutputType>;
     /** ActionStateOrder: defaults to ActionOrder.Before. */
     actionStateOrder?: ActionOrder;
+    /**
+     * IgnoreEndOfInput: defaults to false. If set to true, reaching the end of the input iteration
+     * before hitting the end state does not result in an error (normally it will).
+     */
+    ignoreEndOfInput?: boolean;
     enableLogging?: boolean;
 };
 
@@ -49,6 +54,7 @@ export type RunMachineResult<StateType, ValueType, OutputType> = {
     output: ReadonlyIfObject<OutputType>;
     errors: CallbackError<StateType, ValueType, OutputType>[];
     logs: string[];
+    finalState: StateType;
 };
 
 export type StateMachine<StateType, ValueType, OutputType> = {
@@ -84,6 +90,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 initialOutput,
                 actionStateOrder = ActionOrder.Before,
                 enableLogging = false,
+                ignoreEndOfInput = false,
             } = {...machineSetup, ...overrideSetup} as Readonly<
                 StateMachineSetup<StateType, ValueType, OutputType>
             >;
@@ -135,13 +142,17 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
 
                 if (nextInput.done) {
                     if (runCount) {
-                        throw new EndOfInputError(
-                            `Reached end of input before hitting end state. Ended on state ${JSON.stringify(
-                                state,
-                            )} with output ${JSON.stringify(
-                                output,
-                            )}. Try running with enableLogging set to true.`,
-                        );
+                        if (ignoreEndOfInput) {
+                            break;
+                        } else {
+                            throw new EndOfInputError(
+                                `Reached end of input before hitting end state. Ended on state ${JSON.stringify(
+                                    state,
+                                )} with output ${JSON.stringify(
+                                    output,
+                                )}. Try running with enableLogging set to true.`,
+                            );
+                        }
                     } else {
                         throw new EmptyInputError(
                             'Input is empty. Input must be an iterable with at least one element, such as a non-empty array.',
@@ -201,7 +212,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 runCount++;
             }
 
-            return {output, logs, errors};
+            return {output, logs, errors, finalState: state};
         },
     };
 
