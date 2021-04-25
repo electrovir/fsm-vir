@@ -111,4 +111,39 @@ testGroup((runTest) => {
             return result.logs;
         },
     });
+
+    runTest({
+        description: 'errors block execution by default',
+        expect: [
+            'Logging turned on.',
+            'actionStateOrder: After',
+            'Starting with output []',
+            'Starting on state "start"',
+            'currentState: start, input: a',
+            'calling calculateNextState',
+            'calling performStateAction',
+            'currentState: do-stuff, input: b',
+            'calling calculateNextState',
+            'calling performStateAction',
+            'currentState: do-stuff, input: c',
+            'calling calculateNextState',
+            'calling performStateAction',
+            'currentState: do-stuff, input: d',
+            'calling calculateNextState',
+            'calling performStateAction',
+            'currentState: do-stuff, input: ',
+            'calling calculateNextState',
+            'calling performStateAction',
+        ],
+        test: () => {
+            const result = objectReaderMachine.runMachine(
+                [{stuff: 'a'}, {stuff: 'b'}, {stuff: 'c'}, {stuff: 'd'}, {stuff: ''}],
+                {
+                    enableLogging: true,
+                    customLogger: (state, input) => `currentState: ${state}, input: ${input.stuff}`,
+                },
+            );
+            return result.logs;
+        },
+    });
 });

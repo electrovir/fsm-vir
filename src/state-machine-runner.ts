@@ -20,6 +20,13 @@ export type handleErrorFunction<StateType, ValueType, OutputType> = (
     error: CallbackError<StateType, ValueType, OutputType>,
 ) => boolean;
 
+export type CustomLoggerFunction<StateType, ValueType, OutputType> = (
+    currentState: StateType,
+    currentInput: ValueType,
+    inputIndex: number,
+    currentOutput: OutputType,
+) => string;
+
 export enum ActionOrder {
     /** Run state actions before state transitions ONLY. This is the default. */
     Before = 'Before',
@@ -48,6 +55,7 @@ export type StateMachineSetup<StateType, ValueType, OutputType> = {
      */
     ignoreEndOfInput?: boolean;
     enableLogging?: boolean;
+    customLogger?: CustomLoggerFunction<StateType, ValueType, OutputType>;
 };
 
 export type RunMachineResult<StateType, ValueType, OutputType> = {
@@ -91,6 +99,10 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 actionStateOrder = ActionOrder.Before,
                 enableLogging = false,
                 ignoreEndOfInput = false,
+                customLogger = (state, input, index) =>
+                    `current state: ${JSON.stringify(state)}, input: ${JSON.stringify(
+                        input,
+                    )} index: ${index}`,
             } = {...machineSetup, ...overrideSetup} as Readonly<
                 StateMachineSetup<StateType, ValueType, OutputType>
             >;
@@ -165,11 +177,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 >;
 
                 if (enableLogging) {
-                    logs.push(
-                        `current state: ${JSON.stringify(state)}, input: ${JSON.stringify(
-                            input,
-                        )} index: ${runCount}`,
-                    );
+                    logs.push(customLogger(state, input, runCount, output));
                 }
 
                 // perform pre transition action
