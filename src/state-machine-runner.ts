@@ -165,7 +165,11 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 >;
 
                 if (enableLogging) {
-                    logs.push(`current state: "${state}", input: "${input}" index: ${runCount}`);
+                    logs.push(
+                        `current state: ${JSON.stringify(state)}, input: ${JSON.stringify(
+                            input,
+                        )} index: ${runCount}`,
+                    );
                 }
 
                 // perform pre transition action
