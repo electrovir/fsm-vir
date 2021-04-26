@@ -185,9 +185,6 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     actionStateOrder === ActionOrder.Before ||
                     actionStateOrder === ActionOrder.Both
                 ) {
-                    if (enableLogging) {
-                        logs.push(`calling performStateAction`);
-                    }
                     try {
                         output = performStateAction(state, input, output);
                     } catch (error) {
@@ -198,9 +195,6 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 // transition to next state
                 const previousState = state;
                 try {
-                    if (enableLogging) {
-                        logs.push(`calling calculateNextState`);
-                    }
                     state = calculateNextState(state, input);
                 } catch (error) {
                     respondToCallbackError(state, input, output, error, CalculateNextStateError);
@@ -211,9 +205,6 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     actionStateOrder === ActionOrder.After ||
                     (actionStateOrder === ActionOrder.Both && previousState !== state)
                 ) {
-                    if (enableLogging) {
-                        logs.push(`calling performStateAction`);
-                    }
                     try {
                         output = performStateAction(state, input, output);
                     } catch (error) {
