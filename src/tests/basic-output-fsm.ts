@@ -6,8 +6,8 @@ enum BasicOutputState {
     End = 'end',
 }
 
-export const basicOutputMachine = createStateMachine({
-    performStateAction(currentState, input: string, lastOutput: Readonly<string[]>) {
+export const basicOutputMachine = createStateMachine<BasicOutputState, string, string[]>({
+    performStateAction(currentState, input, lastOutput) {
         if (input === 'action error') {
             // for testing
             throw new Error('intentionally throw error in performStateAction');
@@ -17,7 +17,7 @@ export const basicOutputMachine = createStateMachine({
         }
         return lastOutput;
     },
-    calculateNextState(currentState, input) {
+    calculateNextState(_currentState, input) {
         if (input === 'state error') {
             // for testing
             throw new Error('intentionally throw error in calculateNextState');

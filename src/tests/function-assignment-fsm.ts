@@ -6,7 +6,7 @@ enum BasicOutputState {
     End = 'end',
 }
 
-export const functionAssignmentMachine = createStateMachine({
+export const functionAssignmentMachine = createStateMachine<BasicOutputState, string, string[]>({
     performStateAction: stateAction,
     calculateNextState: nextState,
     initialState: BasicOutputState.Start,
@@ -26,7 +26,7 @@ function stateAction(
     return lastOutput;
 }
 
-function nextState(currentState: BasicOutputState, input: string): Readonly<BasicOutputState> {
+function nextState(_currentState: BasicOutputState, input: string): Readonly<BasicOutputState> {
     if (input) {
         return BasicOutputState.DoStuff;
     }

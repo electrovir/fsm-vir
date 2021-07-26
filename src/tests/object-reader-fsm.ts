@@ -17,7 +17,7 @@ export const objectReaderMachine = createStateMachine({
         }
         return lastOutput;
     },
-    calculateNextState(currentState, input) {
+    calculateNextState(_currentState, input) {
         if (input.stuff === 'state error') {
             // for testing
             throw new Error('intentionally throw error in calculateNextState');

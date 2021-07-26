@@ -3,18 +3,17 @@ import {CallbackError} from './errors/callback-error';
 import {EmptyInputError} from './errors/empty-input-error';
 import {EndOfInputError} from './errors/end-of-input-error';
 import {StateActionError} from './errors/state-action-error';
-import {ReadonlyIfObject} from './type-helpers';
 
 export type performStateActionFunction<StateType, ValueType, OutputType> = (
-    currentState: ReadonlyIfObject<StateType>,
-    input: ReadonlyIfObject<ValueType>,
-    lastOutput: ReadonlyIfObject<OutputType>,
-) => ReadonlyIfObject<OutputType>;
+    currentState: Readonly<StateType>,
+    input: Readonly<ValueType>,
+    lastOutput: Readonly<OutputType>,
+) => Readonly<OutputType>;
 
 export type nextStateFunction<StateType, ValueType> = (
-    currentState: ReadonlyIfObject<StateType>,
-    input: ReadonlyIfObject<ValueType>,
-) => ReadonlyIfObject<StateType>;
+    currentState: Readonly<StateType>,
+    input: Readonly<ValueType>,
+) => Readonly<StateType>;
 
 export type handleErrorFunction<StateType, ValueType, OutputType> = (
     error: CallbackError<StateType, ValueType, OutputType>,
@@ -44,9 +43,9 @@ export type StateMachineSetup<StateType, ValueType, OutputType> = {
     calculateNextState: nextStateFunction<StateType, ValueType>;
     /** HandleError callback: return true to continue execution, false to abort. */
     handleError?: handleErrorFunction<StateType, ValueType, OutputType>;
-    initialState: ReadonlyIfObject<StateType>;
-    endState: ReadonlyIfObject<StateType>;
-    initialOutput?: ReadonlyIfObject<OutputType>;
+    initialState: Readonly<StateType>;
+    endState: Readonly<StateType>;
+    initialOutput?: Readonly<OutputType>;
     /** ActionStateOrder: defaults to ActionOrder.Before. */
     actionStateOrder?: ActionOrder;
     /**
@@ -59,7 +58,7 @@ export type StateMachineSetup<StateType, ValueType, OutputType> = {
 };
 
 export type RunMachineResult<StateType, ValueType, OutputType> = {
-    output: ReadonlyIfObject<OutputType>;
+    output: Readonly<OutputType>;
     errors: CallbackError<StateType, ValueType, OutputType>[];
     logs: string[];
     finalState: StateType;
@@ -107,24 +106,24 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 StateMachineSetup<StateType, ValueType, OutputType>
             >;
 
-            let state: ReadonlyIfObject<StateType> = initialState;
+            let state: Readonly<StateType> = initialState;
             const iterator: Readonly<Iterator<ValueType>> = inputs[Symbol.iterator]();
             // this will only be undefined if the initial output is undefined, in which case the
             // OutputType generic MUST be undefined anyway.
-            let output: ReadonlyIfObject<OutputType> = initialOutput!;
+            let output: Readonly<OutputType> = initialOutput!;
             const logs: string[] = [];
             const errors: CallbackError<StateType, ValueType, OutputType>[] = [];
             let runCount = 0;
 
             function respondToCallbackError(
-                state: ReadonlyIfObject<StateType>,
-                input: ReadonlyIfObject<ValueType>,
-                output: ReadonlyIfObject<OutputType>,
+                state: Readonly<StateType>,
+                input: Readonly<ValueType>,
+                output: Readonly<OutputType>,
                 error: any,
                 errorType: new (
-                    state: ReadonlyIfObject<StateType>,
-                    input: ReadonlyIfObject<ValueType>,
-                    output: ReadonlyIfObject<OutputType>,
+                    state: Readonly<StateType>,
+                    input: Readonly<ValueType>,
+                    output: Readonly<OutputType>,
                     error: any,
                 ) => CallbackError<StateType, ValueType, OutputType>,
             ) {
@@ -172,7 +171,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     }
                 }
 
-                const input: ReadonlyIfObject<ValueType> = nextInput.value as ReadonlyIfObject<
+                const input: Readonly<ValueType> = nextInput.value as Readonly<
                     typeof nextInput.value
                 >;
 

@@ -26,7 +26,7 @@ function createComplexStateMachine<OutputGeneric extends OutputType>() {
             }
             return lastOutput;
         },
-        calculateNextState(currentState, input) {
+        calculateNextState(_currentState, input) {
             if (input === 'state error') {
                 // for testing
                 throw new Error('intentionally throw error in calculateNextState');

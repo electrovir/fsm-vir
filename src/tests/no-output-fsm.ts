@@ -15,14 +15,14 @@ export function getNoOutputStateMachineRunCount(): number {
     return runCount;
 }
 
-export const noOutputStateMachine = createStateMachine({
-    performStateAction(state, input: string, lastOutput) {
+export const noOutputStateMachine = createStateMachine<NoOutputState, string, undefined>({
+    performStateAction(state, _input: string, lastOutput) {
         if (state === NoOutputState.Start) {
             ++runCount;
         }
         return lastOutput;
     },
-    calculateNextState(currentState, input) {
+    calculateNextState(_currentState, _input) {
         return NoOutputState.End;
     },
     initialState: NoOutputState.Start,
