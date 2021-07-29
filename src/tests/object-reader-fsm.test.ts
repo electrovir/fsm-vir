@@ -1,6 +1,43 @@
 import {testGroup} from 'test-vir';
 import {StateActionError} from '../errors/state-action-error';
-import {objectReaderMachine} from './object-reader-fsm';
+import {ActionOrder, createStateMachine} from '../state-machine-runner';
+
+enum BasicOutputState {
+    Start = 'start',
+    DoStuff = 'do-stuff',
+    End = 'end',
+}
+
+enum ErrorMessages {
+    ActionError = 'intentionally throw error in performStateAction',
+    StateError = 'intentionally throw error in calculateNextState',
+}
+
+export const objectReaderMachine = createStateMachine({
+    performStateAction(currentState, input: {stuff: string}, lastOutput: Readonly<string[]>) {
+        if (input.stuff === 'action error') {
+            // for testing
+            throw new Error(ErrorMessages.ActionError);
+        }
+        if (currentState === BasicOutputState.DoStuff) {
+            return lastOutput.concat(input.stuff);
+        }
+        return lastOutput;
+    },
+    calculateNextState(_currentState, input) {
+        if (input.stuff === 'state error') {
+            // for testing
+            throw new Error(ErrorMessages.StateError);
+        } else if (input.stuff) {
+            return BasicOutputState.DoStuff;
+        }
+        return BasicOutputState.End;
+    },
+    initialState: BasicOutputState.Start,
+    initialOutput: [],
+    endState: BasicOutputState.End,
+    actionStateOrder: ActionOrder.After,
+});
 
 testGroup((runTest) => {
     runTest({
@@ -28,10 +65,8 @@ testGroup((runTest) => {
         description: 'verify that logging outputs something',
         expect: true,
         test: () => {
-            const result = objectReaderMachine.runMachine([{stuff: 'dummy value'}, {stuff: ''}], {
-                enableLogging: true,
-            });
-            return result.logs.length > 5;
+            const result = objectReaderMachine.runMachine([{stuff: 'dummy value'}, {stuff: ''}]);
+            return !!result.logs.length;
         },
     });
 
@@ -39,51 +74,47 @@ testGroup((runTest) => {
         description: 'verify longer output',
         expect: ['a', 'b', 'c', 'd', 'e', 'f'],
         test: () => {
-            const result = objectReaderMachine.runMachine(
-                [
-                    {stuff: 'a'},
-                    {stuff: 'b'},
-                    {stuff: 'c'},
-                    {stuff: 'd'},
-                    {stuff: 'e'},
-                    {stuff: 'f'},
-                    {stuff: ''},
-                    {stuff: 'h'},
-                ],
-                {
-                    enableLogging: true,
-                },
-            );
+            const result = objectReaderMachine.runMachine([
+                {stuff: 'a'},
+                {stuff: 'b'},
+                {stuff: 'c'},
+                {stuff: 'd'},
+                {stuff: 'e'},
+                {stuff: 'f'},
+                {stuff: ''},
+                {stuff: 'h'},
+            ]);
             return result.output;
         },
     });
 
     runTest({
-        description: 'errors block execution by default',
-        expectError: {
-            errorClass: StateActionError,
-        },
-        test: () => {
-            const result = objectReaderMachine.runMachine(
-                [
-                    {stuff: 'a'},
-                    {stuff: 'b'},
-                    {stuff: 'c'},
-                    {stuff: 'd'},
-                    {stuff: 'action error'},
-                    {stuff: 'state error'},
-                    {stuff: ''},
-                ],
-                {enableLogging: true},
-            );
-            return result.output;
-        },
-    });
-
-    runTest({
-        description: 'errors block execution by default',
+        description: 'errors should be stored so it can be retrieved later',
         expect: [
-            'Logging turned on.',
+            new StateActionError(
+                'do-stuff',
+                {stuff: 'action error'},
+                ['a', 'b', 'c', 'd'],
+                new Error(ErrorMessages.ActionError),
+            ),
+        ],
+        test: () => {
+            const result = objectReaderMachine.runMachine([
+                {stuff: 'a'},
+                {stuff: 'b'},
+                {stuff: 'c'},
+                {stuff: 'd'},
+                {stuff: 'action error'},
+                {stuff: 'state error'},
+                {stuff: ''},
+            ]);
+            return result.errors;
+        },
+    });
+
+    runTest({
+        description: 'should store logs for later use',
+        expect: [
             'actionStateOrder: After',
             'Starting with output []',
             'Starting on state "start"',
@@ -94,18 +125,20 @@ testGroup((runTest) => {
             'current state: "do-stuff", input: {"stuff":""} index: 4',
         ],
         test: () => {
-            const result = objectReaderMachine.runMachine(
-                [{stuff: 'a'}, {stuff: 'b'}, {stuff: 'c'}, {stuff: 'd'}, {stuff: ''}],
-                {enableLogging: true},
-            );
+            const result = objectReaderMachine.runMachine([
+                {stuff: 'a'},
+                {stuff: 'b'},
+                {stuff: 'c'},
+                {stuff: 'd'},
+                {stuff: ''},
+            ]);
             return result.logs;
         },
     });
 
     runTest({
-        description: 'errors block execution by default',
+        description: 'should store logs with custom logger',
         expect: [
-            'Logging turned on.',
             'actionStateOrder: After',
             'Starting with output []',
             'Starting on state "start"',
@@ -119,8 +152,8 @@ testGroup((runTest) => {
             const result = objectReaderMachine.runMachine(
                 [{stuff: 'a'}, {stuff: 'b'}, {stuff: 'c'}, {stuff: 'd'}, {stuff: ''}],
                 {
-                    enableLogging: true,
-                    customLogger: (state, input) => `currentState: ${state}, input: ${input.stuff}`,
+                    customTransitionLogger: (state, input) =>
+                        `currentState: ${state}, input: ${input.stuff}`,
                 },
             );
             return result.logs;

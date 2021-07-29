@@ -10,6 +10,7 @@ type OutputType = {
     thing: string;
 };
 
+/** This machine isn't being run in a test (yet) because it's just here for type checking. */
 function createComplexStateMachine<OutputGeneric extends OutputType>() {
     const startingState: Readonly<OutputGeneric> = {
         thing: 'hello',

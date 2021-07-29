@@ -1,6 +1,43 @@
 import {testGroup} from 'test-vir';
 import {StateActionError} from '../errors/state-action-error';
-import {basicOutputMachine} from './basic-output-fsm';
+import {ActionOrder, createStateMachine} from '../state-machine-runner';
+
+enum BasicOutputState {
+    Start = 'start',
+    DoStuff = 'do-stuff',
+    End = 'end',
+}
+
+enum BasicOutputErrorMessage {
+    ActionError = 'intentionally throw error in performStateAction',
+    StateError = 'intentionally throw error in calculateNextState',
+}
+
+export const basicOutputMachine = createStateMachine<BasicOutputState, string, string[]>({
+    performStateAction(currentState, input, lastOutput) {
+        if (input === 'action error') {
+            // for testing
+            throw new Error(BasicOutputErrorMessage.ActionError);
+        }
+        if (currentState === BasicOutputState.DoStuff) {
+            return lastOutput.concat(input);
+        }
+        return lastOutput;
+    },
+    calculateNextState(_currentState, input) {
+        if (input === 'state error') {
+            // for testing
+            throw new Error(BasicOutputErrorMessage.StateError);
+        } else if (input) {
+            return BasicOutputState.DoStuff;
+        }
+        return BasicOutputState.End;
+    },
+    initialState: BasicOutputState.Start,
+    initialOutput: [],
+    endState: BasicOutputState.End,
+    actionStateOrder: ActionOrder.After,
+});
 
 testGroup((runTest) => {
     runTest({
@@ -23,10 +60,8 @@ testGroup((runTest) => {
         description: 'verify that logging outputs something',
         expect: true,
         test: () => {
-            const result = basicOutputMachine.runMachine(['dummy value', ''], {
-                enableLogging: true,
-            });
-            return result.logs.length > 5;
+            const result = basicOutputMachine.runMachine(['dummy value', ''], {});
+            return !!result.logs.length;
         },
     });
 
@@ -34,24 +69,32 @@ testGroup((runTest) => {
         description: 'verify longer output',
         expect: ['a', 'b', 'c', 'd', 'e', 'f'],
         test: () => {
-            const result = basicOutputMachine.runMachine(['a', 'b', 'c', 'd', 'e', 'f', '', 'h'], {
-                enableLogging: true,
-            });
+            const result = basicOutputMachine.runMachine(['a', 'b', 'c', 'd', 'e', 'f', '', 'h']);
             return result.output;
         },
     });
 
     runTest({
-        description: 'errors block execution by default',
-        expectError: {
-            errorClass: StateActionError,
-        },
+        description: 'errors should be caught',
+        expect: [
+            new StateActionError(
+                BasicOutputState.DoStuff,
+                'action error',
+                ['a', 'b', 'c', 'd'],
+                new Error(BasicOutputErrorMessage.ActionError),
+            ),
+        ],
         test: () => {
-            const result = basicOutputMachine.runMachine(
-                ['a', 'b', 'c', 'd', 'action error', 'state error', ''],
-                {enableLogging: true},
-            );
-            return result.output;
+            const result = basicOutputMachine.runMachine([
+                'a',
+                'b',
+                'c',
+                'd',
+                'action error',
+                'state error',
+                '',
+            ]);
+            return result.errors;
         },
     });
 });
