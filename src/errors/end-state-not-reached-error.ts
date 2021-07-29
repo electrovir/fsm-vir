@@ -4,7 +4,7 @@ export class EndStateNotReachedError<StateType, OutputType = undefined> extends 
         super(
             `Reached end of input before hitting end state. Ended on state ${JSON.stringify(
                 state,
-            )} with output ${JSON.stringify(output)}. Try running with enableLogging set to true.`,
+            )} with output ${JSON.stringify(output)}. Try inspecting the logs.`,
         );
     }
 }
