@@ -53,7 +53,6 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 endState,
                 initialOutput,
                 actionStateOrder = ActionOrder.Before,
-                ignoreEndOfInput = false,
                 customTransitionLogger = defaultTransitionLogger,
             } = {...machineSetup, ...overrideSetup} as Readonly<
                 StateMachineSetup<StateType, ValueType, OutputType>
@@ -105,13 +104,9 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
 
                 if (nextInput.done) {
                     if (runCount) {
-                        if (ignoreEndOfInput) {
-                            break;
-                        } else {
-                            errors.push(new EndOfInputError(state, output));
-                            aborted = true;
-                            break;
-                        }
+                        errors.push(new EndOfInputError(state, output));
+                        aborted = true;
+                        break;
                     } else {
                         errors.push(new EmptyInputError());
                         aborted = true;

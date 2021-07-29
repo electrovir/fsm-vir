@@ -53,13 +53,6 @@ testGroup((runTest) => {
     });
 
     runTest({
-        description: 'ignore not reaching end state if ignoreEndOfInput is true',
-        test: () => {
-            functionAssignmentMachine.runMachine(['nonempty string'], {ignoreEndOfInput: true});
-        },
-    });
-
-    runTest({
         description: 'run on basically empty array',
         test: () => {
             functionAssignmentMachine.runMachine(['']);

@@ -44,11 +44,6 @@ export type StateMachineSetup<StateType, ValueType, OutputType> = {
     initialOutput?: Readonly<OutputType>;
     /** ActionStateOrder: defaults to ActionOrder.Before. */
     actionStateOrder?: ActionOrder;
-    /**
-     * IgnoreEndOfInput: defaults to false. If set to true, reaching the end of the input iteration
-     * before hitting the end state does not result in an error (normally it will).
-     */
-    ignoreEndOfInput?: boolean;
     customTransitionLogger?: CustomTransitionLoggerFunction<StateType, ValueType, OutputType>;
 };
 
