@@ -2,7 +2,7 @@
 
 # fsm-vir
 
-The heroic finite state machine package. Can be used to create Mealy or Moore finite state machines.
+The heroic finite state machine package. Has zero dependencies! Can be used to quickly create Mealy or Moore finite state machines.
 
 # Usage
 

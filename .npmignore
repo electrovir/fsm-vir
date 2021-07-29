@@ -1,9 +1,10 @@
-.github
-.vscode
-dist/tests
-src
-.prettierrc.json
-prettierignore
-tsconfig.json
 .cspell.json
 .gitattributes
+.github
+.prettierrc.json
+.vscode
+dist/readme-examples
+dist/tests
+prettierignore
+src
+tsconfig.json
