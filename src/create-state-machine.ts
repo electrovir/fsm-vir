@@ -15,15 +15,15 @@ import {
 export const defaultTransitionLogger: CustomTransitionLoggerFunction<unknown, unknown, unknown> = (
     state,
     input,
-    index,
-) => `current state: ${JSON.stringify(state)}, input: ${JSON.stringify(input)} index: ${index}`;
+) => `current state: ${JSON.stringify(state)}, input: ${JSON.stringify(input)}`;
 
 /**
  * This creates a state machine. The state machine is a Mealy machine but outputs are generated
- * independent of the state transition. As you can see in the argument object, the "action" function
- * (which generates outputs) is distinct from the "next" function, which calculates the next state.
- * The implementation of "action" is of course left to the user, so you can totally just ignore the
- * current value and make this a Moore machine if you wish.
+ * independent of the state transition. As can be seen in the StateMachineSetup type, the "action"
+ * function, performStateAction, (which generates an output) is distinct from the "next" function,
+ * calculateNextState (which calculates the next state). The implementation of "action" is of course
+ * left to the user. The current input can thus be totally ignored which would then make the state
+ * machine a Moore machine.
  */
 export function createStateMachine<StateType, ValueType, OutputType = undefined>(
     machineSetup: Readonly<StateMachineSetup<StateType, ValueType, OutputType>>,
@@ -40,10 +40,10 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
     ) => output;
 
     const stateMachine: StateMachine<StateType, ValueType, OutputType> = {
-        initParams: machineSetup,
+        initialSetup: machineSetup,
         runMachine(
             inputs: Iterable<ValueType>,
-            overrideSetup?: Readonly<Partial<StateMachineSetup<StateType, ValueType, OutputType>>>,
+            setupOverride?: Readonly<Partial<StateMachineSetup<StateType, ValueType, OutputType>>>,
         ): RunMachineResult<StateType, OutputType> {
             const {
                 performStateAction = defaultStateAction,
@@ -54,7 +54,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 initialOutput,
                 actionStateOrder = ActionOrder.Before,
                 customTransitionLogger = defaultTransitionLogger,
-            } = {...machineSetup, ...overrideSetup} as Readonly<
+            } = {...machineSetup, ...setupOverride} as Readonly<
                 StateMachineSetup<StateType, ValueType, OutputType>
             >;
 
@@ -66,7 +66,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
             const logs: string[] = [];
             const errors: Error[] = [];
             let aborted = false;
-            let runCount = 0;
+            let executionCount = 0;
 
             /**
              * If this function ever returns false, that indicates that the machine should halt all
@@ -103,7 +103,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 const nextInput = iterator.next();
 
                 if (nextInput.done) {
-                    if (runCount) {
+                    if (executionCount) {
                         errors.push(new EndStateNotReachedError(state, output));
                         aborted = true;
                         break;
@@ -118,7 +118,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     typeof nextInput.value
                 >;
 
-                logs.push(customTransitionLogger(state, input, runCount, output));
+                logs.push(customTransitionLogger(state, input, executionCount, output));
 
                 // perform pre transition action
                 if (
@@ -173,10 +173,10 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     }
                 }
 
-                runCount++;
+                executionCount++;
             }
 
-            return {output, logs, errors, finalState: state, aborted};
+            return {output, logs, errors, finalState: state, aborted, executionCount};
         },
     };
 

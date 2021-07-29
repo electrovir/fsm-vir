@@ -1,23 +1,4 @@
-[![tests](https://github.com/electrovir/fsm-vir/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/electrovir/fsm-vir/actions/workflows/tests.yml)
-
-# fsm-vir
-
-The heroic finite state machine package. Can be used to create Mealy or Moore finite state machines.
-
-# Usage
-
-## Install
-
-This package is available [via npm](https://www.npmjs.com/package/fsm-vir):
-
-```bash
-npm i fsm-vir
-```
-
-## Example
-
-```typescript
-import {createStateMachine} from 'fsm-vir';
+import {createStateMachine} from '..';
 
 /** Finite states must be defined. */
 enum MyState {
@@ -64,8 +45,3 @@ const result = myStateMachine.runMachine([
 
 console.log(result.output);
 // This person likes birthday cake.
-```
-
-## Details
-
-For more details, see the [type definitions](https://github.com/electrovir/fsm-vir/blob/master/src/state-machine-types.ts) which are well documented.

@@ -117,11 +117,11 @@ testGroup((runTest) => {
             'actionStateOrder: After',
             'Starting with output []',
             'Starting on state "start"',
-            'current state: "start", input: {"stuff":"a"} index: 0',
-            'current state: "do-stuff", input: {"stuff":"b"} index: 1',
-            'current state: "do-stuff", input: {"stuff":"c"} index: 2',
-            'current state: "do-stuff", input: {"stuff":"d"} index: 3',
-            'current state: "do-stuff", input: {"stuff":""} index: 4',
+            'current state: "start", input: {"stuff":"a"}',
+            'current state: "do-stuff", input: {"stuff":"b"}',
+            'current state: "do-stuff", input: {"stuff":"c"}',
+            'current state: "do-stuff", input: {"stuff":"d"}',
+            'current state: "do-stuff", input: {"stuff":""}',
         ],
         test: () => {
             const result = objectReaderMachine.runMachine([
