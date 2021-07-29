@@ -4,7 +4,7 @@ export abstract class CallbackError<StateType, ValueType, OutputType> extends Er
         public readonly currentState: Readonly<StateType>,
         public readonly currentValue: Readonly<ValueType>,
         public readonly currentOutput: Readonly<OutputType>,
-        error: any,
+        public readonly error: any,
     ) {
         super(error);
     }

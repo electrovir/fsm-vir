@@ -19,7 +19,7 @@ export type handleErrorFunction<StateType, ValueType, OutputType> = (
     error: CallbackError<StateType, ValueType, OutputType>,
 ) => boolean;
 
-export type CustomLoggerFunction<StateType, ValueType, OutputType> = (
+export type CustomTransitionLoggerFunction<StateType, ValueType, OutputType> = (
     currentState: StateType,
     currentInput: ValueType,
     inputIndex: number,
@@ -53,13 +53,12 @@ export type StateMachineSetup<StateType, ValueType, OutputType> = {
      * before hitting the end state does not result in an error (normally it will).
      */
     ignoreEndOfInput?: boolean;
-    enableLogging?: boolean;
-    customLogger?: CustomLoggerFunction<StateType, ValueType, OutputType>;
+    customTransitionLogger?: CustomTransitionLoggerFunction<StateType, ValueType, OutputType>;
 };
 
-export type RunMachineResult<StateType, ValueType, OutputType> = {
+export type RunMachineResult<StateType, OutputType> = {
     output: Readonly<OutputType>;
-    errors: CallbackError<StateType, ValueType, OutputType>[];
+    errors: Error[];
     logs: string[];
     finalState: StateType;
 };
@@ -69,7 +68,7 @@ export type StateMachine<StateType, ValueType, OutputType> = {
     runMachine: (
         inputs: Iterable<ValueType>,
         overrideSetup?: Readonly<Partial<StateMachineSetup<StateType, ValueType, OutputType>>>,
-    ) => RunMachineResult<StateType, ValueType, OutputType>;
+    ) => RunMachineResult<StateType, OutputType>;
 };
 
 /**
@@ -87,7 +86,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
         runMachine(
             inputs: Iterable<ValueType>,
             overrideSetup?: Readonly<Partial<StateMachineSetup<StateType, ValueType, OutputType>>>,
-        ): RunMachineResult<StateType, ValueType, OutputType> {
+        ): RunMachineResult<StateType, OutputType> {
             const {
                 performStateAction = (state, input, output) => output,
                 calculateNextState,
@@ -96,9 +95,8 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 endState,
                 initialOutput,
                 actionStateOrder = ActionOrder.Before,
-                enableLogging = false,
                 ignoreEndOfInput = false,
-                customLogger = (state, input, index) =>
+                customTransitionLogger = (state, input, index) =>
                     `current state: ${JSON.stringify(state)}, input: ${JSON.stringify(
                         input,
                     )} index: ${index}`,
@@ -112,9 +110,10 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
             // OutputType generic MUST be undefined anyway.
             let output: Readonly<OutputType> = initialOutput!;
             const logs: string[] = [];
-            const errors: CallbackError<StateType, ValueType, OutputType>[] = [];
+            const errors: Error[] = [];
             let runCount = 0;
 
+            /** False value indicates that the machine should halt. */
             function respondToCallbackError(
                 state: Readonly<StateType>,
                 input: Readonly<ValueType>,
@@ -126,27 +125,21 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     output: Readonly<OutputType>,
                     error: any,
                 ) => CallbackError<StateType, ValueType, OutputType>,
-            ) {
+            ): boolean {
                 const callbackError = new errorType(state, input, output, error);
                 errors.push(callbackError);
-                if (enableLogging) {
-                    logs.push(`Error: ${errorType.name}`);
-                }
+                logs.push(`Error: ${errorType.name}`);
                 if (handleError(callbackError)) {
-                    if (enableLogging) {
-                        logs.push('Error handled. Resuming operation...');
-                    }
+                    logs.push('Error handled. Resuming operation...');
+                    return true;
                 } else {
-                    throw callbackError;
+                    return false;
                 }
             }
 
-            if (enableLogging) {
-                logs.push('Logging turned on.');
-                logs.push(`actionStateOrder: ${actionStateOrder}`);
-                logs.push(`Starting with output ${JSON.stringify(output)}`);
-                logs.push(`Starting on state ${JSON.stringify(state)}`);
-            }
+            logs.push(`actionStateOrder: ${actionStateOrder}`);
+            logs.push(`Starting with output ${JSON.stringify(output)}`);
+            logs.push(`Starting on state ${JSON.stringify(state)}`);
 
             while (state !== endState) {
                 const nextInput = iterator.next();
@@ -156,18 +149,12 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                         if (ignoreEndOfInput) {
                             break;
                         } else {
-                            throw new EndOfInputError(
-                                `Reached end of input before hitting end state. Ended on state ${JSON.stringify(
-                                    state,
-                                )} with output ${JSON.stringify(
-                                    output,
-                                )}. Try running with enableLogging set to true.`,
-                            );
+                            errors.push(new EndOfInputError(state, output));
+                            break;
                         }
                     } else {
-                        throw new EmptyInputError(
-                            'Input is empty. Input must be an iterable with at least one element, such as a non-empty array.',
-                        );
+                        errors.push(new EmptyInputError());
+                        break;
                     }
                 }
 
@@ -175,9 +162,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     typeof nextInput.value
                 >;
 
-                if (enableLogging) {
-                    logs.push(customLogger(state, input, runCount, output));
-                }
+                logs.push(customTransitionLogger(state, input, runCount, output));
 
                 // perform pre transition action
                 if (
@@ -187,7 +172,11 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     try {
                         output = performStateAction(state, input, output);
                     } catch (error) {
-                        respondToCallbackError(state, input, output, error, StateActionError);
+                        if (
+                            !respondToCallbackError(state, input, output, error, StateActionError)
+                        ) {
+                            break;
+                        }
                     }
                 }
 
@@ -196,7 +185,17 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 try {
                     state = calculateNextState(state, input);
                 } catch (error) {
-                    respondToCallbackError(state, input, output, error, CalculateNextStateError);
+                    if (
+                        !respondToCallbackError(
+                            state,
+                            input,
+                            output,
+                            error,
+                            CalculateNextStateError,
+                        )
+                    ) {
+                        break;
+                    }
                 }
 
                 // perform post transition action
@@ -207,7 +206,11 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                     try {
                         output = performStateAction(state, input, output);
                     } catch (error) {
-                        respondToCallbackError(state, input, output, error, StateActionError);
+                        if (
+                            !respondToCallbackError(state, input, output, error, StateActionError)
+                        ) {
+                            break;
+                        }
                     }
                 }
 
