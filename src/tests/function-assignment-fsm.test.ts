@@ -1,7 +1,5 @@
 import {testGroup} from 'test-vir';
-import {EmptyInputError} from '../errors/empty-input-error';
-import {EndOfInputError} from '../errors/end-of-input-error';
-import {createStateMachine} from '../state-machine-runner';
+import {createStateMachine, EmptyInputError, EndOfInputError} from '..';
 
 enum BasicOutputState {
     Start = 'start',

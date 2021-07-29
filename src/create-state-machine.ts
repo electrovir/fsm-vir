@@ -3,73 +3,20 @@ import {CallbackError} from './errors/callback-error';
 import {EmptyInputError} from './errors/empty-input-error';
 import {EndOfInputError} from './errors/end-of-input-error';
 import {StateActionError} from './errors/state-action-error';
+import {
+    ActionOrder,
+    CustomTransitionLoggerFunction,
+    performStateActionFunction,
+    RunMachineResult,
+    StateMachine,
+    StateMachineSetup,
+} from './state-machine-types';
 
-export type performStateActionFunction<StateType, ValueType, OutputType> = (
-    currentState: Readonly<StateType>,
-    input: Readonly<ValueType>,
-    lastOutput: Readonly<OutputType>,
-) => Readonly<OutputType>;
-
-export type nextStateFunction<StateType, ValueType> = (
-    currentState: Readonly<StateType>,
-    input: Readonly<ValueType>,
-) => Readonly<StateType>;
-
-export type handleErrorFunction<StateType, ValueType, OutputType> = (
-    error: CallbackError<StateType, ValueType, OutputType>,
-) => boolean;
-
-export type CustomTransitionLoggerFunction<StateType, ValueType, OutputType> = (
-    currentState: StateType,
-    currentInput: ValueType,
-    inputIndex: number,
-    currentOutput: OutputType,
-) => string;
-
-export enum ActionOrder {
-    /** Run state actions before state transitions ONLY. This is the default. */
-    Before = 'Before',
-    /** Run state actions after state transitions ONLY. */
-    After = 'After',
-    /**
-     * Run state actions before state transitions AND after state transitions if and only if the
-     * state changed.
-     */
-    Both = 'Both',
-}
-
-export type StateMachineSetup<StateType, ValueType, OutputType> = {
-    performStateAction?: performStateActionFunction<StateType, ValueType, OutputType>;
-    calculateNextState: nextStateFunction<StateType, ValueType>;
-    /** HandleError callback: return true to continue execution, false to abort. */
-    handleError?: handleErrorFunction<StateType, ValueType, OutputType>;
-    initialState: Readonly<StateType>;
-    endState: Readonly<StateType>;
-    initialOutput?: Readonly<OutputType>;
-    /** ActionStateOrder: defaults to ActionOrder.Before. */
-    actionStateOrder?: ActionOrder;
-    /**
-     * IgnoreEndOfInput: defaults to false. If set to true, reaching the end of the input iteration
-     * before hitting the end state does not result in an error (normally it will).
-     */
-    ignoreEndOfInput?: boolean;
-    customTransitionLogger?: CustomTransitionLoggerFunction<StateType, ValueType, OutputType>;
-};
-
-export type RunMachineResult<StateType, OutputType> = {
-    output: Readonly<OutputType>;
-    errors: Error[];
-    logs: string[];
-    finalState: StateType;
-};
-
-export type StateMachine<StateType, ValueType, OutputType> = {
-    initParams: Readonly<StateMachineSetup<StateType, ValueType, OutputType>>;
-    runMachine: (
-        inputs: Iterable<ValueType>,
-        overrideSetup?: Readonly<Partial<StateMachineSetup<StateType, ValueType, OutputType>>>,
-    ) => RunMachineResult<StateType, OutputType>;
-};
+export const defaultTransitionLogger: CustomTransitionLoggerFunction<unknown, unknown, unknown> = (
+    state,
+    input,
+    index,
+) => `current state: ${JSON.stringify(state)}, input: ${JSON.stringify(input)} index: ${index}`;
 
 /**
  * This creates a state machine. The state machine is a Mealy machine but outputs are generated
@@ -81,6 +28,17 @@ export type StateMachine<StateType, ValueType, OutputType> = {
 export function createStateMachine<StateType, ValueType, OutputType = undefined>(
     machineSetup: Readonly<StateMachineSetup<StateType, ValueType, OutputType>>,
 ): StateMachine<StateType, ValueType, OutputType> {
+    /**
+     * If no state action callback is provided to a state machine, this becomes the state action.
+     * All this does is return the given input, so the final state machine output will end up being
+     * identical to the initial state machine output, which was assigned in the state machine setup object.
+     */
+    const defaultStateAction: performStateActionFunction<StateType, ValueType, OutputType> = (
+        _state,
+        _input,
+        output,
+    ) => output;
+
     const stateMachine: StateMachine<StateType, ValueType, OutputType> = {
         initParams: machineSetup,
         runMachine(
@@ -88,7 +46,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
             overrideSetup?: Readonly<Partial<StateMachineSetup<StateType, ValueType, OutputType>>>,
         ): RunMachineResult<StateType, OutputType> {
             const {
-                performStateAction = (state, input, output) => output,
+                performStateAction = defaultStateAction,
                 calculateNextState,
                 handleError = () => false,
                 initialState,
@@ -96,10 +54,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 initialOutput,
                 actionStateOrder = ActionOrder.Before,
                 ignoreEndOfInput = false,
-                customTransitionLogger = (state, input, index) =>
-                    `current state: ${JSON.stringify(state)}, input: ${JSON.stringify(
-                        input,
-                    )} index: ${index}`,
+                customTransitionLogger = defaultTransitionLogger,
             } = {...machineSetup, ...overrideSetup} as Readonly<
                 StateMachineSetup<StateType, ValueType, OutputType>
             >;
@@ -111,9 +66,13 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
             let output: Readonly<OutputType> = initialOutput!;
             const logs: string[] = [];
             const errors: Error[] = [];
+            let aborted = false;
             let runCount = 0;
 
-            /** False value indicates that the machine should halt. */
+            /**
+             * If this function ever returns false, that indicates that the machine should halt all
+             * execution immediately.
+             */
             function respondToCallbackError(
                 state: Readonly<StateType>,
                 input: Readonly<ValueType>,
@@ -150,10 +109,12 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                             break;
                         } else {
                             errors.push(new EndOfInputError(state, output));
+                            aborted = true;
                             break;
                         }
                     } else {
                         errors.push(new EmptyInputError());
+                        aborted = true;
                         break;
                     }
                 }
@@ -175,6 +136,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                         if (
                             !respondToCallbackError(state, input, output, error, StateActionError)
                         ) {
+                            aborted = true;
                             break;
                         }
                     }
@@ -194,6 +156,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                             CalculateNextStateError,
                         )
                     ) {
+                        aborted = true;
                         break;
                     }
                 }
@@ -209,6 +172,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                         if (
                             !respondToCallbackError(state, input, output, error, StateActionError)
                         ) {
+                            aborted = true;
                             break;
                         }
                     }
@@ -217,7 +181,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
                 runCount++;
             }
 
-            return {output, logs, errors, finalState: state};
+            return {output, logs, errors, finalState: state, aborted};
         },
     };
 

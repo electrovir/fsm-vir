@@ -1,4 +1,4 @@
-import {ActionOrder, createStateMachine} from '../state-machine-runner';
+import {ActionOrder, createStateMachine} from '..';
 
 enum BasicState {
     Start = 'start',

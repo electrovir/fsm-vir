@@ -1,5 +1,5 @@
 import {testGroup} from 'test-vir';
-import {ActionOrder, createStateMachine} from '../state-machine-runner';
+import {ActionOrder, createStateMachine} from '..';
 
 enum BasicOutputState {
     Start = 'start',
