@@ -1,7 +1,7 @@
 import {CalculateNextStateError} from './errors/calculate-next-state-error';
 import {CallbackError} from './errors/callback-error';
 import {EmptyInputError} from './errors/empty-input-error';
-import {EndOfInputError} from './errors/end-of-input-error';
+import {EndStateNotReachedError} from './errors/end-state-not-reached-error';
 import {StateActionError} from './errors/state-action-error';
 import {
     ActionOrder,
@@ -104,7 +104,7 @@ export function createStateMachine<StateType, ValueType, OutputType = undefined>
 
                 if (nextInput.done) {
                     if (runCount) {
-                        errors.push(new EndOfInputError(state, output));
+                        errors.push(new EndStateNotReachedError(state, output));
                         aborted = true;
                         break;
                     } else {

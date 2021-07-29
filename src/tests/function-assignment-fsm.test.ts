@@ -1,5 +1,5 @@
 import {testGroup} from 'test-vir';
-import {createStateMachine, EmptyInputError, EndOfInputError} from '..';
+import {createStateMachine, EmptyInputError, EndStateNotReachedError} from '..';
 
 enum BasicOutputState {
     Start = 'start',
@@ -46,7 +46,7 @@ testGroup((runTest) => {
 
     runTest({
         description: "fail if didn't reach end state",
-        expect: [new EndOfInputError('do-stuff', [])],
+        expect: [new EndStateNotReachedError('do-stuff', [])],
         test: () => {
             return functionAssignmentMachine.runMachine(['nonempty string']).errors;
         },

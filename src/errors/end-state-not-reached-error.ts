@@ -1,5 +1,5 @@
-export class EndOfInputError<StateType, OutputType = undefined> extends Error {
-    public readonly name = 'EndOfInputError';
+export class EndStateNotReachedError<StateType, OutputType = undefined> extends Error {
+    public readonly name = 'EndStateNotReachedError';
     constructor(public readonly state: StateType, public readonly output: OutputType) {
         super(
             `Reached end of input before hitting end state. Ended on state ${JSON.stringify(
