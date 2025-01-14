@@ -1,17 +1,16 @@
 {
     "compilerOptions": {
-        "alwaysStrict": true,
-        "declaration": true,
-        "forceConsistentCasingInFileNames": true,
-        "module": "commonjs",
-        "noEmitOnError": true,
-        "noImplicitAny": true,
-        "noImplicitReturns": true,
-        "noImplicitThis": true,
-        "noUncheckedIndexedAccess": true,
-        "outDir": "dist",
-        "rootDir": "src",
-        "strict": true,
-        "target": "ES2018"
-    }
+        "outDir": "./dist/",
+        "rootDir": "./src/"
+    },
+    "exclude": [
+        "./configs/",
+        "./coverage/",
+        "./dist-*/",
+        "./dist/",
+        "./node_modules/",
+        "./test-files/",
+        "src/all-files-for-code-coverage.test.ts"
+    ],
+    "extends": "@virmator/compile/configs/tsconfig.base.json"
 }

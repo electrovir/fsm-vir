@@ -1,22 +1,21 @@
-[![tests](https://github.com/electrovir/fsm-vir/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/electrovir/fsm-vir/actions/workflows/tests.yml)
-
 # fsm-vir
 
-The heroic finite state machine package. Has zero dependencies! Can be used to quickly create Mealy or Moore finite state machines.
-
-# Usage
+The heroic finite state machine package. Can be used to quickly create Mealy or Moore finite state machines.
 
 ## Install
 
-This package is available [via npm](https://www.npmjs.com/package/fsm-vir):
-
-```bash
+```sh
 npm i fsm-vir
 ```
 
-## Example
+## Usage
 
-```typescript
+Full type docs are here: https://electrovir.github.io/fsm-vir
+Here's an example usage:
+
+<!-- example-link: src/readme-examples/simple-usage.example.ts -->
+
+```TypeScript
 import {createStateMachine} from 'fsm-vir';
 
 /** Finite states must be defined. */
@@ -51,7 +50,7 @@ const myStateMachine = createStateMachine<MyState, string, string>({
 /** Run the state machine with a set of inputs */
 const result = myStateMachine.runMachine([
     'person name',
-    'Rando Winston',
+    'Random Winston',
     'person hair color',
     'brown',
     'person likes',
@@ -65,7 +64,3 @@ const result = myStateMachine.runMachine([
 console.log(result.output);
 // This person likes birthday cake.
 ```
-
-## Details
-
-For more details, see the [type definitions](https://github.com/electrovir/fsm-vir/blob/master/src/state-machine-types.ts) which are well documented.

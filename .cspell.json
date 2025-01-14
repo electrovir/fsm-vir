@@ -1,5 +1,0 @@
-{
-    "ignorePaths": ["node_modules/**", "package-lock.json", "dist/**"],
-    "version": "0.1",
-    "words": ["accum", "electrovir", "packagejson", "rando"]
-}
