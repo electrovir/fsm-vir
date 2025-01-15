@@ -1,47 +1,40 @@
-import {createStateMachine} from '..';
+import {runFsm} from '../index.js';
 
-/** Finite states must be defined. */
-enum MyState {
-    Start = 'start',
-    Middle = 'middle',
-    End = 'end',
-}
-
-/** Define a state machine like so: */
-const myStateMachine = createStateMachine<MyState, string, string>({
-    performStateAction: (currentState, input, lastOutput) => {
-        if (currentState === MyState.Middle) {
-            return `This person likes ${input}.`;
+runFsm({
+    /** The initial state of the state machine. */
+    initState: 'start',
+    /** Any iterable of values to process. */
+    inputs: [
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+    ],
+    /** Calculate the next state for the current input. */
+    nextState({input}) {
+        if (input === 'b') {
+            return {
+                /** Return `nextState` to update the current state to a new value. */
+                nextState: 'next',
+            };
+        } else if (input === 'd') {
+            return {
+                /** Return `stop: true` to halt input processing and the state machine as a whole. */
+                stop: true,
+            };
         } else {
-            return lastOutput;
+            /** Return `undefined` to not perform any state updates. */
+            return undefined;
         }
     },
-    calculateNextState: (currentState, input) => {
-        if (currentState === MyState.Start && input.endsWith('likes')) {
-            return MyState.Middle;
-        } else if (currentState === MyState.Middle) {
-            return MyState.End;
-        } else {
-            return currentState;
-        }
+    /** Optionally perform actions for each processed input. */
+    actions: {
+        preNextState({input, state}) {
+            /** Do some action here before the next state is calculated. */
+        },
+        postNextState({input, state}) {
+            /** Do some action here after the next state is calculated. */
+        },
     },
-    initialState: MyState.Start,
-    endState: MyState.End,
 });
-
-/** Run the state machine with a set of inputs */
-const result = myStateMachine.runMachine([
-    'person name',
-    'Rando Winston',
-    'person hair color',
-    'brown',
-    'person likes',
-    'birthday cake',
-    'person eye color',
-    'brown',
-    'person ear size',
-    'small',
-]);
-
-console.log(result.output);
-// This person likes birthday cake.

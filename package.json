@@ -1,6 +1,6 @@
 {
     "name": "fsm-vir",
-    "version": "1.0.1",
+    "version": "2.0.0",
     "description": "The heroic finite state machine.",
     "keywords": [
         "fsm",
@@ -44,10 +44,11 @@
         "test:update": "npm test update"
     },
     "dependencies": {
-        "@augment-vir/assert": "^31.7.1"
+        "@augment-vir/assert": "^31.7.2",
+        "@augment-vir/common": "^31.7.2"
     },
     "devDependencies": {
-        "@augment-vir/test": "^31.7.1",
+        "@augment-vir/test": "^31.7.2",
         "@eslint/eslintrc": "^3.2.0",
         "@eslint/js": "^9.14.0",
         "@stylistic/eslint-plugin": "^2.13.0",
