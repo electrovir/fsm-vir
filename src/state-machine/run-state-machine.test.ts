@@ -92,32 +92,39 @@ describe(runFsm.name, () => {
                 {
                     input: 'a',
                     state: 'start',
+                    index: 0,
                 },
                 {
                     input: 'b',
                     state: 'start',
+                    index: 1,
                 },
                 {
                     input: 'c',
                     state: 'next',
+                    index: 2,
                 },
                 {
                     input: 'd',
                     state: 'next',
+                    index: 3,
                 },
             ],
             post: [
                 {
                     input: 'a',
                     state: 'start',
+                    index: 0,
                 },
                 {
                     input: 'b',
                     state: 'next',
+                    index: 1,
                 },
                 {
                     input: 'c',
                     state: 'next',
+                    index: 2,
                 },
             ],
         });

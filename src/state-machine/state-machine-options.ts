@@ -9,6 +9,8 @@ import {type PartialWithUndefined} from '@augment-vir/common';
 export type CallbackParams<State, Input> = {
     state: State;
     input: Readonly<Input>;
+    /** Index of the current input in the original input iterator. */
+    index: number;
 };
 
 /**

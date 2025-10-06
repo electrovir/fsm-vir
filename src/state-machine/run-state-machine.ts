@@ -1,5 +1,5 @@
 import {check} from '@augment-vir/assert';
-import {type StateMachine} from './state-machine-options.js';
+import {type CallbackParams, type StateMachine} from './state-machine-options.js';
 
 /**
  * Run a state machine by iterating over a list of inputs. Execution stops once all inputs have been
@@ -15,6 +15,7 @@ export function runFsm<State, Input>({
 }: StateMachine<State, Input>): State {
     const inputIterator = inputs[Symbol.iterator]();
     let state = initState;
+    let inputIndex = 0;
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
@@ -25,9 +26,15 @@ export function runFsm<State, Input>({
         }
         const input = iteratorNext.value;
 
-        actions?.preNextState?.({input, state});
+        const callbackParams: CallbackParams<State, Input> = {
+            input,
+            state,
+            index: inputIndex++,
+        };
 
-        const nextStateOutput = nextState({input, state});
+        actions?.preNextState?.(callbackParams);
+
+        const nextStateOutput = nextState(callbackParams);
 
         if (check.hasKey(nextStateOutput, 'stop')) {
             return state;
@@ -35,6 +42,9 @@ export function runFsm<State, Input>({
             state = nextStateOutput.nextState;
         }
 
-        actions?.postNextState?.({input, state});
+        actions?.postNextState?.({
+            ...callbackParams,
+            state,
+        });
     }
 }
