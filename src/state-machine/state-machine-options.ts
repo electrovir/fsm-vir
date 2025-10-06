@@ -4,7 +4,7 @@ import {type PartialWithUndefined} from '@augment-vir/common';
  * Parameters for each callback (the `nextState` callback and the action callbacks, `preNextState`
  * and `postNextState`).
  *
- * @category Types
+ * @category Internal
  */
 export type CallbackParams<State, Input> = {
     state: State;
@@ -14,7 +14,7 @@ export type CallbackParams<State, Input> = {
 /**
  * Callback for determining the next state in the state machine.
  *
- * @category Types
+ * @category Internal
  * @returns
  *
  *   - `{nextState: <State>}`: Sets the next state.
@@ -29,16 +29,16 @@ export type NextStateCallback<State, Input> = (
 /**
  * A callback for performing an action per processed input.
  *
- * @category Types
+ * @category Internal
  */
 export type ActionCallback<State, Input> = (params: CallbackParams<State, Input>) => void;
 
 /**
  * Options for `runFsm`.
  *
- * @category Types
+ * @category Internal
  */
-export type StateMachineOptions<State, Input> = {
+export type StateMachine<State, Input> = {
     /** All inputs to iterate over for the state machine. */
     inputs: Readonly<Iterable<Input>>;
     /** Initial state for the state machine. */

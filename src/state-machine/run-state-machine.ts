@@ -1,5 +1,5 @@
 import {check} from '@augment-vir/assert';
-import {type StateMachineOptions} from './state-machine-options.js';
+import {type StateMachine} from './state-machine-options.js';
 
 /**
  * Run a state machine by iterating over a list of inputs. Execution stops once all inputs have been
@@ -12,7 +12,7 @@ export function runFsm<State, Input>({
     nextState,
     inputs,
     actions,
-}: StateMachineOptions<State, Input>): State {
+}: StateMachine<State, Input>): State {
     const inputIterator = inputs[Symbol.iterator]();
     let state = initState;
 
