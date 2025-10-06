@@ -1,5 +1,5 @@
 import {check} from '@augment-vir/assert';
-import {StateMachineOptions} from './state-machine-options.js';
+import {type StateMachineOptions} from './state-machine-options.js';
 
 /**
  * Run a state machine by iterating over a list of inputs. Execution stops once all inputs have been

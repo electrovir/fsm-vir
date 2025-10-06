@@ -1,7 +1,7 @@
 import {assert} from '@augment-vir/assert';
 import {describe, it, itCases} from '@augment-vir/test';
 import {runFsm} from './run-state-machine.js';
-import {CallbackParams} from './state-machine-options.js';
+import {type CallbackParams} from './state-machine-options.js';
 
 describe(runFsm.name, () => {
     itCases(runFsm, [
